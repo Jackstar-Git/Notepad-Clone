@@ -1,9 +1,7 @@
 from Gui import window, input_label, font
 from Gui import *
 from settings import read_values, write
-
 from tkinter import *
-
 import pyperclip
 from tkinter.filedialog import *
 from datetime import *
