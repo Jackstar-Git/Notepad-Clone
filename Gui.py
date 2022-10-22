@@ -7,6 +7,23 @@ import keyboard
 window = Tk()
 window.title("UnsavedFile")
 
+def place_window():
+    window_height = 470
+    window_width = 1200
+
+    screen_height = window.winfo_screenheight()
+    screen_width = window.winfo_screenwidth()
+
+
+    y_position = int((screen_height-window_height)/2.35)
+    x_position = int((screen_width - window_width) / 2)
+
+    window.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
+
+place_window()
+
+
+
 font = ft.Font(family="Arial", size=12)
 
 
