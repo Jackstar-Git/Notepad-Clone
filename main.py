@@ -1,7 +1,9 @@
 from Gui import window, input_label, font
 from Gui import *
 from settings import read_values, write
+
 from tkinter import *
+
 import pyperclip
 from tkinter.filedialog import *
 from datetime import *
@@ -9,6 +11,7 @@ from tkinter import messagebox
 
 read_values()
 path = ""
+
 
 def save():
     global path
@@ -228,9 +231,6 @@ def change_font_style():
     font_list.bind("<<ListboxSelect>>", set_font_style)
 
 
-
-
-
 def zoom():
     zoom_factor = font.cget("size")
     zoom_factor += 1
@@ -244,21 +244,52 @@ def unzoom():
 
 
 def loremipsum():
+    def copy_to_clip():
+        try:
+            amount = int(character_input.get())
+            with open("src/loremipsum.txt", "r") as f:
+                data = f.read()
+                data_string = data[0:amount]
+                pyperclip.copy(data_string)
+                messagebox.showinfo("Info", "Copied to Clipboard!")
+            top.destroy()
+        except ValueError:
+            messagebox.showerror("Error!", "Your input must be a number!")
+            top.destroy()
+            loremipsum()
+
+    def insert():
+        try:
+            amount = int(character_input.get())
+            with open("src/loremipsum.txt", "r") as f:
+                data = f.read()
+                data_string = data[0:amount]
+                input_label.insert(END, data_string)
+            top.destroy()
+        except ValueError:
+            messagebox.showerror("Error!", "Your input must be a number!")
+            top.destroy()
+            loremipsum()
+
+    def cancel():
+        top.destroy()
+
     top = Toplevel(window)
 
-    text_label = Label(top, text="Number of characters:")
-    text_label.grid(column=0, row=0)
+    text_label = Label(top, text="Number of characters:", font=("Arial", 13))
+    text_label.grid(column=0, row=0, columnspan=3, sticky="w")
 
-    character_input = Entry(top)
+    character_input = Entry(top, font=("Arial", 15))
     character_input.grid(row=1, column=0, columnspan=3, sticky="we")
 
-    with open("src/loremipsum.txt", "r") as f:
-        data = f.read()
-        x = 1000000
-        data_string = data[0:x]
-        print(data_string)
+    button_copy = Button(top, text="Copy to Clipboard", command=copy_to_clip)
+    button_copy.grid(row=2, column=0, sticky="we")
 
+    button_insert = Button(top, text="Insert", command=insert)
+    button_insert.grid(row=2, column=1, sticky="we")
 
+    button_cancel = Button(top, text="Cancel", command=cancel)
+    button_cancel.grid(row=2, column=2, sticky="we")
 
 
 if __name__ == '__main__':
