@@ -3,23 +3,21 @@ from Gui import font, input_label
 
 
 file = "src/settings.json"
-background_color = "#FFFFFF"
-font_color = "#000000"
 
 
 def write():
     with open(file, "w") as f:
         data = {"font_size": font.cget("size"),
                 "font_style": font.cget("family"),
-                "background_color": background_color,
-                "foreground_color": font_color
+                "background_color": input_label.cget("background"),
+                "foreground_color": input_label.cget("foreground"),
+                "selection_background": input_label.cget("selectbackground")
                 }
 
         json.dump(data, f, indent=4)
 
 
 def read_values():
-    global background_color
     try:
         with open(file, "r") as f:
             jsonObject = json.load(f)
@@ -30,7 +28,9 @@ def read_values():
 
         background_color = jsonObject["background_color"]
         foreground_color = jsonObject["foreground_color"]
-        input_label.config(bg=background_color, fg=foreground_color)
+        select_background = jsonObject["selection_background"]
+        input_label.config(bg=background_color, fg=foreground_color, insertbackground=foreground_color,
+                           selectbackground=select_background)
 
     except:
         write()

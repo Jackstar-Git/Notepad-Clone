@@ -1,3 +1,5 @@
+import tkinter.colorchooser
+
 from Gui import window, input_label, font
 from Gui import *
 from settings import read_values, write
@@ -8,6 +10,7 @@ import pyperclip
 from tkinter.filedialog import *
 from datetime import *
 from tkinter import messagebox
+from tkinter.colorchooser import askcolor
 
 read_values()
 path = ""
@@ -18,11 +21,12 @@ def save():
     try:
         with open(path, "w") as file:
             file.write(input_label.get("1.0", END))
+        window.title(path)
     except FileNotFoundError:
         new_file()
-        pass
-
-    window.title(path)
+        with open(path, "w") as file:
+            file.write(input_label.get("1.0", END))
+        window.title("UnsavedFile")
 
 
 def open_file():
@@ -43,7 +47,7 @@ def new_file():
         path = asksaveasfilename()
         with open(path, "w") as file:
             file.write("")
-            window.title(path)
+        window.title(path)
     except FileNotFoundError:
         pass
 
@@ -113,7 +117,7 @@ def get_time():
 
 
 def count_words():
-    data = input_label.get("1.0", END).strip().split(" ")
+    data = input_label.get("1.0", END).strip().replace("\n", "").split(" ")
     symbols = list(input_label.get("1.0", END).strip())
     messagebox.showinfo("Count", f"Word Count:\n{len(data)}\n\n Symbol Count\n{len(symbols)}")
 
@@ -290,6 +294,80 @@ def loremipsum():
 
     button_cancel = Button(top, text="Cancel", command=cancel)
     button_cancel.grid(row=2, column=2, sticky="we")
+
+
+def change_font_color():
+    color = askcolor(color=input_label.cget("foreground"))
+    try:
+        font_color = color[1]
+        input_label.config(fg=font_color, insertbackground=font_color)
+        write()
+    except TclError:
+        pass
+
+
+def change_background():
+    color = askcolor(color=input_label.cget("background"))
+    try:
+        background_color = color[1]
+        input_label.config(bg=background_color)
+        write()
+    except TclError:
+        pass
+
+
+def change_selection_background():
+    color = askcolor(color=input_label.cget("selectbackground"))
+    try:
+        selection_color = color[1]
+        input_label.config(selectbackground=selection_color)
+        write()
+    except TclError:
+        pass
+
+
+def check_unsaved(x):
+    try:
+        with open(path, "r") as file:
+            old_content = file.read()
+        new_content = input_label.get(1.0, END)[:-1]
+
+        if old_content != new_content:
+            window.title(f"* {path}")
+
+    except FileNotFoundError:
+        pass
+
+
+
+def on_closing():
+    global path
+
+    def dialog():
+        answer = messagebox.askyesnocancel("Unsaved Changes", "You have unsaved changes!\n Do you want to save them?",
+                                           icon="warning")
+        if answer:
+            save()
+            window.destroy()
+        elif answer is None:
+            pass
+        else:
+            window.destroy()
+
+    try:
+        with open(path, "r") as file:
+            old_content = file.read()
+        new_content = input_label.get(1.0, END)[:-1]
+
+        if old_content != new_content:
+            dialog()
+        else:
+            window.destroy()
+
+    except FileNotFoundError:
+        dialog()
+    else:
+        pass
 
 
 if __name__ == '__main__':

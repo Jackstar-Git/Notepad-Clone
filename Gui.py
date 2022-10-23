@@ -3,9 +3,9 @@ from pynput import mouse
 from tkinter import font as ft
 import keyboard
 
-
 window = Tk()
 window.title("UnsavedFile")
+
 
 def place_window():
     window_height = 470
@@ -14,29 +14,28 @@ def place_window():
     screen_height = window.winfo_screenheight()
     screen_width = window.winfo_screenwidth()
 
-
-    y_position = int((screen_height-window_height)/2.35)
+    y_position = int((screen_height - window_height) / 2.35)
     x_position = int((screen_width - window_width) / 2)
 
     window.geometry(f"{window_width}x{window_height}+{x_position}+{y_position}")
 
+
 place_window()
-
-
 
 font = ft.Font(family="Arial", size=12)
 
 
-
-
-
 def add_hotkeys():
+    keyboard.add_hotkey("ctrl + n", new_file)
     keyboard.add_hotkey('ctrl + s', save)
     keyboard.add_hotkey("ctrl + o", open_file)
     keyboard.add_hotkey("ctrl + r", replace)
+    keyboard.add_hotkey("ctrl + l", loremipsum)
     keyboard.add_hotkey("ctrl + shift + d", get_date)
     keyboard.add_hotkey("ctrl + shift + t", get_time)
+    keyboard.add_hotkey("ctrl + shift + c", count_words)
     keyboard.add_hotkey("ctrl + 2", unzoom)
+    keyboard.add_hotkey("ctrl + 1", zoom)
 
     def on_scroll(x_cords, y_cords, dx, dy):
         if dy > 0 and keyboard.is_pressed("ctrl"):
@@ -90,37 +89,49 @@ scrollbar.grid(row=0, rowspan=26, column=15, sticky="nse")
 scrollbar.config(command=input_label.yview)
 scrollbar_sideways.grid(row=26, columnspan=25, column=0, sticky="wes")
 scrollbar_sideways.config(command=input_label.xview)
-menu = Menu(window)
-window.config(menu=menu)
-filemenu = Menu(menu, tearoff=0)
-filemenu.add_command(label="New", command=new_file)
-filemenu.add_command(label="Save", command=save)
-filemenu.add_command(label="Open", command=open_file)
-filemenu.add_separator()
-filemenu.add_command(label="Exit", command=exit)
-editmenu = Menu(menu, tearoff=0)
-editmenu.add_command(label="Cut", command=cut)
-editmenu.add_command(label="Copy", command=copy)
-editmenu.add_command(label="Paste", command=paste)
-editmenu.add_separator()
-editmenu.add_command(label="Replace", command=replace)
-editmenu.add_command(label="Lorem Ipsum", command=loremipsum)
-editmenu.add_separator()
-editmenu.add_command(label="Date", command=get_date)
-editmenu.add_command(label="Time", command=get_time)
-inspectmenu = Menu(menu, tearoff=0)
-inspectmenu.add_command(label="Count Words", command=count_words)
-viewmenu = Menu(menu, tearoff=0)
-viewmenu_font = Menu(viewmenu, tearoff=0)
-viewmenu_font.add_command(label="Change Font Size", command=change_font_size)
-viewmenu_font.add_command(label="Change Font Style", command=change_font_style)
-viewmenu.add_cascade(label="Change Font", underline=0, menu=viewmenu_font)
-menu.add_cascade(label="File", menu=filemenu)
-menu.add_cascade(label="Edit", menu=editmenu)
-menu.add_cascade(label="Inspect", menu=inspectmenu)
-menu.add_cascade(label="View", menu=viewmenu)
-input_label.bind("<FocusOut>", focus_off)
-input_label.bind("<FocusIn>", focus_on)
+
+
+def render_menu():
+    menu = Menu(window)
+    window.config(menu=menu)
+    filemenu = Menu(menu, tearoff=0)
+    filemenu.add_command(label="New", command=new_file, accelerator="Ctrl+N")
+    filemenu.add_command(label="Save", command=save,accelerator="Ctrl+S")
+    filemenu.add_command(label="Open", command=open_file, accelerator="Ctrl+O")
+    filemenu.add_separator()
+    filemenu.add_command(label="Exit", command=lambda: window.destroy(), accelerator="Alt+F4")
+    editmenu = Menu(menu, tearoff=0)
+    editmenu.add_command(label="Cut", command=cut, accelerator="Ctrl+X" )
+    editmenu.add_command(label="Copy", command=copy, accelerator="Ctrl+C")
+    editmenu.add_command(label="Paste", command=paste, accelerator="Ctrl+V")
+    editmenu.add_separator()
+    editmenu.add_command(label="Replace", command=replace, accelerator="Ctrl+R")
+    editmenu.add_command(label="Lorem Ipsum", command=loremipsum, accelerator="Ctrl+L")
+    editmenu.add_separator()
+    editmenu.add_command(label="Date", command=get_date, accelerator="Ctrl+Shif+D")
+    editmenu.add_command(label="Time", command=get_time, accelerator="Ctrl+Shift +T")
+    inspectmenu = Menu(menu, tearoff=0)
+    inspectmenu.add_command(label="Count Words", command=count_words, accelerator="Ctrl+ Shift + C")
+    viewmenu = Menu(menu, tearoff=0)
+    viewmenu_font = Menu(viewmenu, tearoff=0)
+    viewmenu_font.add_command(label="Change Font Size", command=change_font_size)
+    viewmenu_font.add_command(label="Change Font Style", command=change_font_style)
+    viewmenu.add_cascade(label="Change Font", underline=0, menu=viewmenu_font)
+    viewmenu.add_command(label="Change Font Color", command=change_font_color)
+    viewmenu.add_command(label="Change Background", command=change_background)
+    viewmenu.add_command(label="Change Selection Color", command=change_selection_background)
+    menu.add_cascade(label="File", menu=filemenu)
+    menu.add_cascade(label="Edit", menu=editmenu)
+    menu.add_cascade(label="Inspect", menu=inspectmenu)
+    menu.add_cascade(label="View", menu=viewmenu)
+    input_label.bind("<FocusOut>", focus_off)
+    input_label.bind("<FocusIn>", focus_on)
+    input_label.bind("<Key>", check_unsaved)
+
+
+render_menu()
+
+window.protocol("WM_DELETE_WINDOW", on_closing)
 
 
 def main_func():
