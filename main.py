@@ -1,5 +1,7 @@
 import tkinter.colorchooser
 
+import keyboard
+from cryptography.fernet import Fernet
 from Gui import window, input_label, font
 from Gui import *
 from settings import read_values, write
@@ -16,38 +18,125 @@ read_values()
 path = ""
 
 
+class ChangeFont:
+    tag_number = 0
+
+    @classmethod
+    def load(cls, num):
+        cls.tag_number = num
+
+    @classmethod
+    def add_tag(cls):
+        try:
+            input_label.tag_add(f"tag{cls.tag_number}", "sel.first", "sel.last")
+            cls.tag_number += 1
+        except TclError:
+            return
+
+    @classmethod
+    def change_selected_color(cls):
+        try:
+            input_label.selection_get()
+        except TclError:
+            return
+        try:
+            color = askcolor(color=input_label.cget("foreground"))
+            font_color = color[1]
+            cls.add_tag()
+            tag_name = input_label.tag_names()[cls.tag_number]
+            input_label.tag_configure(tag_name, foreground=font_color)
+        except TclError:
+            return
+
+    @classmethod
+    def change_selected_background(cls):
+        try:
+            input_label.selection_get()
+        except TclError:
+            return
+        try:
+            color = askcolor(color=input_label.cget("background"))
+            bg_color = color[1]
+            cls.add_tag()
+            tag_name = input_label.tag_names()[cls.tag_number]
+            input_label.tag_configure(tag_name, background=bg_color)
+        except TclError:
+            return
+
+
 def save():
+    from custom_files import save_custom
     global path
+    temp_path = path
     try:
-        with open(path, "w") as file:
-            file.write(input_label.get("1.0", END))
-        window.title(path)
-    except FileNotFoundError:
-        new_file()
-        with open(path, "w") as file:
-            file.write(input_label.get("1.0", END))
-        window.title("UnsavedFile")
+        try:
+            file_ending = str(temp_path.split(".")[1])
+        except IndexError:
+            file_ending = ""
+            new_file()
+
+        if file_ending == "own":
+            save_custom(temp_path)
+            window.title(path)
+        else:
+            try:
+                with open(path, "w") as file:
+                    file.write(input_label.get("1.0", END))
+                window.title(path)
+            except FileNotFoundError:
+                new_file()
+                with open(path, "w") as file:
+                    file.write(input_label.get("1.0", END))
+                window.title("UnsavedFile")
+    except Exception:
+        pass
 
 
 def open_file():
+    from custom_files import open_custom
     global path
-    path = askopenfilename(initialdir="files/",
-                           filetypes=(('Text files', "*.txt"), ("JSON files", "*json"), ('All files', '*.*')))
-    with open(path, "r") as file:
-        content = file.read()
-    input_label.delete(1.0, END)
-    input_label.insert(1.0, content)
+    try:
+        path = askopenfilename(initialdir="files/",
+                               filetypes=(('Text files', "*.txt"), ("JSON files", "*json"), ("Custom Files", "*.own"),
+                                          ('All files', '*.*')))
+        file_ending = ""
+        try:
+            file_ending = str(path.split(".")[1])
+        except IndexError:
+            path += ".txt"
+        if file_ending == "own":
+            open_custom(path)
+        else:
+            with open(path, "r") as file:
+                content = file.read()
+            input_label.delete(1.0, END)
+            input_label.insert(1.0, content)
 
-    window.title(path)
+        window.title(path)
+    except FileNotFoundError:
+        pass
 
 
 def new_file():
+    from custom_files import create_file
     global path
     try:
         path = asksaveasfilename()
-        with open(path, "w") as file:
-            file.write("")
+        file_ending = ""
+        if path == "":
+            return
+        try:
+            file_ending = str(path.split(".")[1])
+        except IndexError:
+            new_file()
+
+        if file_ending == "own":
+            create_file(path)
+        elif file_ending=="txt":
+            with open(path, "w") as file:
+                file.write("")
         window.title(path)
+        input_label.delete(1.0, END)
     except FileNotFoundError:
         pass
 
@@ -55,12 +144,10 @@ def new_file():
 def cut():
     try:
         cut_string = input_label.selection_get()
+        pyperclip.copy(cut_string)
+        input_label.delete("sel.first", "sel.last")
     except TclError:
         return
-    pyperclip.copy(cut_string)
-    input_label.delete(f"end-{len(input_label.selection_get()) + 1}c", END)
-
-    window.title(path)
 
 
 def copy():
@@ -296,7 +383,7 @@ def loremipsum():
     button_cancel.grid(row=2, column=2, sticky="we")
 
 
-def change_font_color():
+def change_global_font_color():
     color = askcolor(color=input_label.cget("foreground"))
     try:
         font_color = color[1]
@@ -330,14 +417,68 @@ def check_unsaved(x):
     try:
         with open(path, "r") as file:
             old_content = file.read()
+
         new_content = input_label.get(1.0, END)[:-1]
 
         if old_content != new_content:
             window.title(f"* {path}")
+        else:
+            window.title(f"{path}")
 
     except FileNotFoundError:
         pass
 
+
+def encrypt():
+    fernet = Fernet(b'7ECn-fAsAZKZCX24dZKSoGd0uWy7eO6expx1aDn7Tyk=')
+
+    with open(path, "rb") as check:
+        check_message = check.read().decode()
+    with open(path, "r") as check:
+        check_message1 = check.read()
+
+    if check_message1 == check_message:
+        messagebox.showerror("Error!", "You cannot encrypt an already encrypted file!")
+    else:
+        with open(path, "r") as file:
+            message = file.read()
+        encrypted_message = fernet.encrypt(message.encode())
+        with open(path, "wb") as file:
+            file.write(encrypted_message)
+        with open(path, "r") as enc_file:
+            encrypted = enc_file.read()
+        input_label.delete(1.0, END)
+        input_label.insert(END, encrypted)
+
+
+def decrypt():
+    fernet = Fernet(b'7ECn-fAsAZKZCX24dZKSoGd0uWy7eO6expx1aDn7Tyk=')
+
+    with open(path, "rb") as check:
+        check_message = check.read().decode()
+    with open(path, "r") as check:
+        check_message1 = check.read()
+
+    if check_message1 != check_message:
+        messagebox.showerror("Error!", "This file is already decrypted!")
+    else:
+
+        with open(path, "rb") as enc_file:
+            encrypted = enc_file.read()
+
+        decrypted = fernet.decrypt(encrypted)
+        decrypted = decrypted.decode()
+
+        input_label.delete(1.0, END)
+        input_label.insert(END, decrypted)
+
+        with open(path, "w") as file:
+            file.write(decrypted)
+
+
+def open_github():
+    import webbrowser
+    webbrowser.open("https://github.com/Jackstar-Git")
 
 
 def on_closing():
@@ -366,6 +507,8 @@ def on_closing():
 
     except FileNotFoundError:
         dialog()
+    except UnicodeDecodeError:
+        window.destroy()
     else:
         pass
 

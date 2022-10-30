@@ -1,5 +1,6 @@
 import json
 from Gui import font, input_label
+from tkinter import messagebox
 
 
 file = "src/settings.json"
@@ -34,4 +35,18 @@ def read_values():
 
     except:
         write()
+        read_values()
+
+
+def reset_settings():
+    answer = messagebox.askyesno("Confirmation", "Are you sure you want to reset everything to the default setting?", icon="warning" )
+    if answer:
+        with open(file, "w") as f:
+            data = {"font_size": 13,
+                    "font_style": "Arial",
+                    "background_color": "#FFFFFF",
+                    "foreground_color": "#000000",
+                    "selection_background": "#3734eb"
+                    }
+            json.dump(data, f, indent=4)
         read_values()
