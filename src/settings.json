@@ -1,7 +1,7 @@
 {
-    "font_size": 12,
+    "font_size": 13,
     "font_style": "Arial",
     "background_color": "#FFFFFF",
     "foreground_color": "#000000",
-    "selection_background": "#4287f5"
+    "selection_background": "#3734eb"
 }
