@@ -165,7 +165,3 @@ def save_custom(pth):
 
     name = os.path.splitext(f"{path}/{file_name}.zip")[0]
     os.rename(f"{path}/{file_name}.zip", name + ".own")
-
-
-if __name__ == '__main__':
-    pass
