@@ -151,14 +151,14 @@ def add_hotkeys():
     listener.start()
 
 
-render_menu()
 
-window.protocol("WM_DELETE_WINDOW", on_closing)
 
 
 def main_func():
     window.title("UnsavedFile")
     icon = PhotoImage(file="src/icon.png")
     window.iconphoto(False, icon)
+    render_menu()
+    window.protocol("WM_DELETE_WINDOW", on_closing)
     window.mainloop()
 
