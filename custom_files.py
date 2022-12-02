@@ -32,8 +32,8 @@ def create_file(pth):
 
 
 def unpack():
-    with zipfile.ZipFile("files/file.own", 'r') as zip_ref:
-        zip_ref.extractall("files")
+    with zipfile.ZipFile("Z:/test.own", 'r') as zip_ref:
+        zip_ref.extractall("Z:/")
 
 
 def open_custom(pth):
@@ -83,6 +83,7 @@ def open_custom(pth):
                         input_label.tag_configure(tag, foreground=foreground_colors[index])
                     if background_colors[index] != "":
                         input_label.tag_configure(tag, background=background_colors[index])
+
         except IndexError:
             pass
 
@@ -91,6 +92,7 @@ def open_custom(pth):
     path = str(pth.rsplit("/", 1)[0])
     file_name = str(pth.split("/")[-1]).replace(".own", "")
     working_path = path + "/temp"
+
 
     with zipfile.ZipFile(f"{path}/{file_name}.own", 'r') as zip_ref:
         os.mkdir(working_path)
@@ -126,6 +128,7 @@ def save_custom(pth):
                 end_index = input_label.tag_ranges(tag)[1]
                 background_color = input_label.tag_cget(tag_name, "background")
                 foreground_color = input_label.tag_cget(tag_name, "foreground")
+
             except IndexError:
                 tag_name = tag
                 index_start = input_label.tag_ranges(tag)
@@ -165,3 +168,7 @@ def save_custom(pth):
 
     name = os.path.splitext(f"{path}/{file_name}.zip")[0]
     os.rename(f"{path}/{file_name}.zip", name + ".own")
+
+
+if __name__ == '__main__':
+    pass

@@ -2,7 +2,7 @@ import tkinter.colorchooser
 
 import keyboard
 from cryptography.fernet import Fernet
-from Gui import window, input_label, font
+from Gui import window, font, input_label
 from Gui import *
 from settings import read_values, write
 
@@ -63,6 +63,72 @@ class ChangeFont:
         except TclError:
             return
 
+    @classmethod
+    def change_selected_font_style(cls):
+        try:
+            input_label.selection_get()
+        except TclError:
+            return
+        try:
+            temp_font = ft.Font(family="Arial", size=12)
+            cls.add_tag()
+            tag_name = input_label.tag_names()[cls.tag_number]
+
+            def set_font_style(f):
+                temp_font.config(family=font_list.get(font_list.curselection()))
+                return f
+
+            def ok():
+                input_label.tag_configure(tag_name, font=temp_font)
+                write()
+                top.destroy()
+
+            def cancel():
+                font.config(family=old_value)
+                top.destroy()
+
+            old_value = font.cget("family")
+
+            top = Toplevel(window)
+            top.resizable(False, False)
+            font.config(size=15)
+
+            font_container_frame = Frame(top, width=440, height=125)
+            font_container_frame.grid(column=0, row=0, rowspan=3, columnspan=4)
+            font_container_frame.grid_propagate(False)
+
+            my_text = Text(font_container_frame, font=temp_font)
+            my_text.grid(row=0, column=0)
+            my_text.delete(1.0, END)
+            my_text.insert(END,
+                           "The big brown fox jumps over the lazy "
+                           "dog!\n\nabcdefghijklmnopqrstuvwxyz\nABCDEFGHIJKLMNOPQRSTUVWXYZ "
+                           "\n0123456789")
+            my_text.config(state="disabled")
+
+            font_list = Listbox(top, selectmode=SINGLE)
+
+            scrollbar_fonts = Scrollbar(top)
+            scrollbar_fonts.grid(row=3, column=3, rowspan=3, columnspan=1, sticky="nse")
+
+            font_list.grid(columnspan=4, rowspan=3, column=0, row=3, sticky="we")
+            font_list.config(yscrollcommand=scrollbar_fonts.set)
+
+            scrollbar_fonts.config(command=font_list.yview)
+
+            ok_button = Button(top, text="OK", command=ok)
+            ok_button.grid(row=7, column=0, columnspan=2, sticky="we")
+            cancel_button = Button(top, text="Cancel", command=cancel)
+            cancel_button.grid(row=7, column=2, columnspan=2, sticky="we")
+
+            for fonts in ft.families():
+                font_list.insert(END, fonts)
+
+            font_list.bind("<<ListboxSelect>>", set_font_style)
+        except TclError:
+            return
+
+
 
 def save():
     from custom_files import save_custom
@@ -93,6 +159,7 @@ def save():
 
 
 def open_file():
+    from Gui import inspectmenu
     from custom_files import open_custom
     global path
     try:
@@ -106,7 +173,9 @@ def open_file():
             path += ".txt"
         if file_ending == "own":
             open_custom(path)
+            inspectmenu.entryconfig("File-Encryption", state="disabled")
         else:
+            inspectmenu.entryconfig("File-Encryption", state="normal")
             with open(path, "r") as file:
                 content = file.read()
             input_label.delete(1.0, END)
@@ -118,6 +187,7 @@ def open_file():
 
 
 def new_file():
+    from Gui import inspectmenu
     from custom_files import create_file
     global path
     try:
@@ -132,7 +202,10 @@ def new_file():
 
         if file_ending == "own":
             create_file(path)
-        elif file_ending=="txt":
+            inspectmenu.entryconfig("File-Encryption", state="disabled")
+
+        elif file_ending == "txt":
+            inspectmenu.entryconfig("File-Encryption", state="normal")
             with open(path, "w") as file:
                 file.write("")
         window.title(path)
@@ -327,11 +400,17 @@ def zoom():
     zoom_factor += 1
     font.config(size=zoom_factor)
 
+    for tag in input_label.tag_names(index=None):
+        input_label.tag_configure(tag, font=font)
+
 
 def unzoom():
     unzoom_factor = font.cget("size")
     unzoom_factor -= 1
     font.config(size=unzoom_factor)
+
+    for tag in input_label.tag_names(index=None):
+        input_label.tag_configure(tag, font=font)
 
 
 def loremipsum():
