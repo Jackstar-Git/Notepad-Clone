@@ -94,11 +94,15 @@ def open_custom(pth):
     working_path = path + "/temp"
 
 
-    with zipfile.ZipFile(f"{path}/{file_name}.own", 'r') as zip_ref:
+    print(f"{path}/{file_name}.own")
+    os.rename(f"{path}/{file_name}.own", file_name + ".zip")
+
+    with zipfile.ZipFile(f"{path}/{file_name}.zip", 'r') as zip_ref:
         os.mkdir(working_path)
         zip_ref.extractall(path=working_path)
-    os.remove(f"{path}/{file_name}.own")
 
+    #os.remove(f"{path}/{file_name}.own")
+    print("Test")
     load_content()
     load_styles()
 
